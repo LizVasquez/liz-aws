@@ -5,4 +5,7 @@ Resources:
     Type: 'AWS::S3::Bucket'
     # DeletionPolicy: Retain
     Properties:
-        BucketName: my-liz-bucket-2022
+        BucketName: my-liz-bucket123-2022
+        WebsiteConfiguration:
+            IndexDocument: index.html
+            ErrorDocument: index.html
