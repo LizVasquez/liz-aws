@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: pk
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
+      KeySchema:
+      - AttributeName: pk
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: '5'
+        WriteCapacityUnits: '5'
+      TableName: petStore
+  PetApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Name: pet-api
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://lizdeployments/dd320ff54edc6af73cbe4098000b9012
+  Adopt:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: adopt
+      Handler: app.adopt
+      Runtime: python3.7
+      CodeUri: s3://lizdeployments/44ecf1471370f682eafda0456e1a7107
+      Events:
+        Adopt:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PetApi
+            Path: /adopt
+            Method: POST
+      Policies:
+      - DynamoDBWritePolicy:
+          TableName:
+            Ref: Table
+  AdoptedByOwner:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: adopted_by_owner
+      Handler: app.adopted_by_owner
+      Runtime: python3.7
+      CodeUri: s3://lizdeployments/44ecf1471370f682eafda0456e1a7107
+      Events:
+        Adopt:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PetApi
+            Path: /adopted/owner/{owner}
+            Method: GET
+  AdoptedByYear:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: adopted_by_year
+      Handler: app.adopted_by_year
+      Runtime: python3.7
+      CodeUri: s3://lizdeployments/44ecf1471370f682eafda0456e1a7107
+      Events:
+        Adopt:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: PetApi
+            Path: /adopted/owner/{owner}/year/{year}
+            Method: GET

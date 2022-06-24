@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  UPBAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Name: upb-api
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://lizdeployments/3891842462a014d1b91009c9f161eef3
+  ListMyBuckets:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: list-my-buckets
+      Handler: app.list_buckets
+      Runtime: python3.7
+      CodeUri: s3://lizdeployments/d1657841794b5173feab57dc2180e967
+      Events:
+        ListBuckets:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: UPBAPI
+            Path: /buckets
+            Method: GET
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:ListAllMyBuckets
+          Resource: '*'
+  CreateBucket:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: create-bucket
+      Handler: app.create_bucket
+      Runtime: python3.7
+      CodeUri: s3://lizdeployments/d1657841794b5173feab57dc2180e967
+      Events:
+        CreateBucket:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: UPBAPI
+            Path: /buckets
+            Method: POST
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:CreateBucket
+          Resource: arn:aws:s3:::upb-*
